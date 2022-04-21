@@ -6,20 +6,16 @@ use std::mem;
 use std::ptr::null;
 use std::ptr::null_mut;
 
-use winapi::shared::minwindef::DWORD;
-use winapi::shared::minwindef::LPVOID;
-use winapi::um::processthreadsapi::GetCurrentProcess;
-use winapi::um::processthreadsapi::OpenProcessToken;
-use winapi::um::securitybaseapi::GetTokenInformation;
-use winapi::um::shellapi::ShellExecuteA;
-use winapi::um::winnt::TokenElevation;
-use winapi::um::winnt::HANDLE;
-use winapi::um::winnt::TOKEN_ELEVATION;
-use winapi::um::winnt::TOKEN_ELEVATION_TYPE;
-use winapi::um::winnt::TOKEN_QUERY;
-use winapi::um::winuser::MessageBoxA;
-use winapi::um::winuser::MB_OK;
-use winapi::um::winuser::SW_SHOWNORMAL;
+use winapi::{
+    shared::minwindef::{DWORD, LPVOID},
+    um::{
+        processthreadsapi::{GetCurrentProcess, OpenProcessToken},
+        securitybaseapi::GetTokenInformation,
+        shellapi::ShellExecuteA,
+        winnt::{TokenElevation, HANDLE, TOKEN_ELEVATION, TOKEN_ELEVATION_TYPE, TOKEN_QUERY},
+        winuser::{MessageBoxA, MB_OK, SW_SHOWNORMAL},
+    },
+};
 
 pub fn is_elevated() -> bool {
     unsafe {
@@ -72,7 +68,7 @@ pub fn run_as_administrator(cmd: &str, args: &str) {
 #[derive(Debug)]
 pub struct WinApiError(i32);
 
-impl std::error::Error for WinApiError { }
+impl std::error::Error for WinApiError {}
 
 impl Display for WinApiError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

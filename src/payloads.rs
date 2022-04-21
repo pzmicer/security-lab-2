@@ -1,4 +1,3 @@
-use std::fs::OpenOptions;
 use std::io::{self, prelude::*};
 use std::{error, fs::File, path::PathBuf};
 
@@ -28,11 +27,6 @@ pub fn archive(path: &PathBuf) -> Result<File, ZipError> {
 }
 
 fn get_zip_path(path: &PathBuf) -> PathBuf {
-    // let mut new_path = PathBuf::from(path);
-    // new_path.pop();
-    // new_path.push(path.file_stem().unwrap());
-    // new_path.set_extension("zip");
-
     let mut new_path = PathBuf::from(path.parent().unwrap());
     new_path.push(path.file_stem().unwrap());
     new_path.set_extension("zip");
@@ -87,34 +81,21 @@ pub fn make_hidden(path: &PathBuf) -> Result<(), Box<dyn error::Error>> {
 
 pub fn do_things(state: &State) -> Result<(), Box<dyn error::Error>> {
     let path = &PathBuf::from(&state.file_path);
-    let mut options = OpenOptions::new();
-    options.read(true);
-    if state.should_hide {
-        options.write(true);
-    }
-    match options.open(path) {
-        Ok(_) => {
-            if state.should_archive {
-                archive(path)?;
-            }
-            if state.should_hash {
-                hash(path)?;
-            }
-            if state.should_hide {
-                make_hidden(path)?;
-            }
-        }
-        Err(_) => {
-            if windows::is_elevated() {
-                return Err("Can't run even as administrator!".into());
-            } else {
-                let args: Vec<String> = std::env::args().collect();
-                let new_args = format!(
-                    "{} {} {} {}",
-                    state.file_path, state.should_archive, state.should_hash, state.should_hide
-                );
-                windows::run_as_administrator(&args[0], &new_args);
-            }
+
+    let admin_should_archive = if state.should_archive { archive(path).is_err() } else { false };
+    let admin_should_hash = if state.should_hash { hash(path).is_err() } else { false };
+    let admin_should_hide = if state.should_hide { make_hidden(path).is_err() } else { false };
+
+    if admin_should_archive || admin_should_hash || admin_should_hide {
+        if windows::is_elevated() {
+            return Err("Can't run even as administrator!".into());
+        } else {
+            let new_args = format!(
+                "{} {} {} {}",
+                state.file_path, admin_should_archive, admin_should_hash, admin_should_hide
+            );
+            let cmd = std::env::current_exe().unwrap();
+            windows::run_as_administrator(cmd.to_str().unwrap(), &new_args);
         }
     }
 
