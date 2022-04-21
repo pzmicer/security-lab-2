@@ -21,7 +21,12 @@ pub fn archive(path: &PathBuf) -> Result<File, ZipError> {
     let zip_path = get_zip_path(path);
     let zip_file = File::create(zip_path)?;
     let mut zip = ZipWriter::new(zip_file); // archive name (should be filename.zip)
-    zip.start_file(path.to_str().to_owned().unwrap(), FileOptions::default())?;
+    
+    zip.start_file(path.file_name().unwrap().to_str().to_owned().unwrap(), FileOptions::default())?;
+    let mut f = File::open(path)?;
+    let mut buffer = Vec::new();
+    f.read_to_end(&mut buffer)?;
+    zip.write_all(&buffer)?;
 
     zip.finish()
 }

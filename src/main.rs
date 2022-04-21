@@ -11,6 +11,8 @@ use std::env;
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
+        // let msg = format!("Is elevated = {}", windows::is_elevated());
+        // windows::show_message(&msg);
         let state = State {
             file_path: args[1].clone(),
             should_archive: args[2].parse().unwrap(),
